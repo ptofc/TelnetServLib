@@ -147,7 +147,7 @@ public:
     TelnetServer() : m_initialised(false), m_promptString("") {};
 
     bool initialise(u_long listenPort, std::string promptString = "");
-    void update();
+    bool update();
     void shutdown();
 
 public:
