@@ -250,7 +250,7 @@ std::vector<std::string> TelnetSession::getCompleteLines(std::string &buffer)
     return lines;
 }
 
-void TelnetSession::update()
+bool TelnetSession::update()
 {
     int  readBytes;
     char recvbuf[DEFAULT_BUFLEN];
@@ -265,7 +265,7 @@ void TelnetSession::update()
         std::cout << "Receive failed with Winsock error code: " << error << "\r\n";
         std::cout << "Closing session and socket.\r\n";
         closesocket(m_socket);
-        return;
+        return false;
     }
 
     if (readBytes > 0) {
@@ -311,6 +311,8 @@ void TelnetSession::update()
             sendPromptAndBuffer();
         }
     }
+    
+    return true;
 }
 
 void TelnetSession::UNIT_TEST()
@@ -449,9 +451,16 @@ void TelnetServer::update()
     }
 
     // Update all the telnet Sessions that are currently in flight.
-    for (SP_TelnetSession ts : m_sessions)
+    for (auto it = m_sessions.begin(); it != m_sessions.end();)
     {
-        ts->update();
+        if ((*it)->update() == false) {
+            // This connection has been closed
+            // Remove this element from list of all the telnet sessions
+            it = m_sessions.erase(it);
+        }
+        else {
+            it++;
+        }
     }
 }
 
